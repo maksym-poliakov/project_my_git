@@ -1,0 +1,10 @@
+.idea/
+.venv/
+.my_git_ignor
+classMyGit.py
+my_git_config
+my_git_config1
+test.py
+__pycache__/
+.git/
+main.py
