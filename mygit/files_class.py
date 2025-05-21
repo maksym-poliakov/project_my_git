@@ -5,21 +5,24 @@ from reportlab.lib.colors import red, green, black
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from mygit.data_class import Data
+from mygit.translator_class import Translator
 from .unknownexception import UnknownException
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 import platform
 import subprocess
 import os
 import shutil
 import difflib
 
+
 class Files :
 
     # Имя конфигурационного файла
     NAME_FILE_CONFIG = '../my_git_config'
     # Список обязательных полей для конфигурационного файла
-    LIST_PARAM_CONFIG = ["path_to_project_folder_default :", "path_to_project_copies_folder_default :"]
+    LIST_PARAM_CONFIG = ["path_to_project_folder_default :", "path_to_project_copies_folder_default :","language :"]
     NAME_FILE_IGNOR = '.my_git_ignor'
     FILE_ANALYSIS_RESULT = 'Files_analysis_result_'
     TEXT_FILE_NAME = '[file name]: ' # для разграничения файлов, указывается имя файла и путь к нему не абсолютный
@@ -33,12 +36,13 @@ class Files :
     __EXTENSION_FILE_ANALYSIS = '.pdf'
     def __init__(self):
         self.data_cls = Data()
+        self.translator = Translator("locales/locales.json")
 
 
     # закрою доступ к изменению переменной
     def __setattr__(self, key, value):
         if key == '_MyGit__EXTENSION_FILE' and hasattr(self, '_MyGit__EXTENSION_FILE'):
-            raise AttributeError("Нельзя изменить значение __EXTENSION_FILE")
+            raise AttributeError(f"{self.show_translation("attribute_error_setattr","__EXTENSION_FILE")}")
         object.__setattr__(self, key, value)
 
 
@@ -196,7 +200,7 @@ class Files :
         if isinstance(field_presence,list) :
             path_extraction = self.path_extraction(field_presence)
             if  not self.path_absolut_check(path_extraction)  :
-                print(f'Введенный путь {path_extraction} не верный')
+                print(f"{self.show_translation("enter_path",path_extraction,"not_true")}")
                 return False
             else:
                 return True
@@ -240,7 +244,6 @@ class Files :
         :param path: Путь который нужно проверить
         :return: True or False
         """
-
         return os.path.isabs(path) and os.path.isdir(path)
 
 
@@ -266,7 +269,7 @@ class Files :
         :return: Путь к папке с файлом ignor
         """
         search_field = "path_to_project_copies_folder_default :"
-        return self.path_project_field(search_field)
+        return self.get_field_value(search_field)
 
 
     def path_folder_project(self) -> str :
@@ -275,16 +278,24 @@ class Files :
         :return: Путь к папке с файлом ignor
         """
         search_field = "path_to_project_folder_default :"
-        return self.path_project_field(search_field)
+        return self.get_field_value(search_field)
 
 
-    def path_project_field(self,search_field:str) -> str :
+    def get_language(self) -> str:
         """
-        Метод для получения пути к необходимой папке из конфигурационного файла
+        Метод для получения языка из конфигурационного файла
+        :return: название языка
+        """
+        search_field = "language :"
+        return self.get_field_value(search_field)
+
+
+    def get_field_value(self,search_field:str) -> str :
+        """
+        Метод для получения значения поля из конфигурационного файла
         :param search_field: Искомое поле в конфигурационном файле
         :return: Путь к папке с копией проекта
         """
-
         path_file_config = os.path.join(self.pwd(),self.NAME_FILE_CONFIG)
         with open(path_file_config, 'r') as file :
             for line in file :
@@ -600,6 +611,7 @@ class Files :
                                                 else:
                                                     new_file.write(line)
 
+
     def dict_copy(self):
         """
         :return: возвращает словарь с доступными копиями проекта. Вместе с путем к ним
@@ -627,7 +639,6 @@ class Files :
                     key += 1
 
         return dict_tmp
-
 
 
     def delete_path(self,value:str) -> str:
@@ -694,7 +705,8 @@ class Files :
                          self.__delete_empty_folder()
 
 
-    def file_analysis(self, key_file_for_analysis:str, path_file_for_analysis:str, path_next_file:str,size_text:int) -> str|None:
+    def file_analysis(self, key_file_for_analysis:str, path_file_for_analysis:str,
+                      path_next_file:str,size_text:int) -> str|None:
         """
         Метод создает аналитический файл для сравнения. После файл удаляется за ненадобностью при переходе
         к следующему действию.
@@ -705,7 +717,7 @@ class Files :
         :return: Путь к файлу с результатом анализа
         """
         # backend1frontend0
-        # Регистрация шрифта с поддержкой кириллицы (например, DejaVuSans)
+        # Регистрация шрифта с поддержкой кириллицы (например, ComicRelief-Regular)
         pdfmetrics.registerFont(TTFont('ComicRelief-Regular', '../Comic_Relief/ComicRelief-Regular.ttf'))
         name_file_for_analysis = self.get_name_file(path_file_for_analysis)
         name_file_next_file = self.get_name_file(path_next_file)
@@ -724,7 +736,7 @@ class Files :
         list_diff_lines = self.line_difference_generator(path_file_for_analysis, path_next_file)
 
         if  list_diff_lines[0] :
-            print('Файлы имеют разное содержимое !!!')
+            print(f"{self.show_translation("list_diff_print_one")}")
             list_text_header_file_analysis = ['File analysis :', name_file_for_analysis,
                                               'and', name_file_next_file]
             lines_header = self.file_result_analysis_header(name_file_for_analysis,
@@ -769,7 +781,7 @@ class Files :
             c.save()
             return path_file_result_analysis
         else:
-            print('Файлы имеют одинаковое содержимое !!!')
+            print(f"{self.show_translation("list_diff_print_two")}")
             return None
 
 
@@ -780,12 +792,12 @@ class Files :
         :param prefix: prefix - добавленный к имени файла для идентификации при необходимости
         :return: None
         """
-        print('print()',self.dict_copy().keys())
+        # print('print()',self.dict_copy().keys())
         for keys, values in self.dict_copy().items():
             for key , val in values.items():
                 if val.find(prefix) >= 0 :
-                    print('keys = ', key)
-                    print('values[0] = ', val)
+                    # print('keys = ', key)
+                    # print('values[0] = ', val)
                     self.delete_copies({keys: [key]})
                 if path_file_analysis is not None :
                     self.delete_file(path_file_analysis)
@@ -812,8 +824,7 @@ class Files :
         obj_canvas.drawCentredString(width / 2, position_y, full_line)
 
 
-    @staticmethod
-    def file_result_analysis_header(file_base_name:str, file_patch_name:str,string_status:str|list[str]) -> list:
+    def file_result_analysis_header(self,file_base_name:str, file_patch_name:str,string_status:str|list[str]) -> list:
         len_file_base = len(file_base_name)
         len_file_patch = len(file_patch_name)
         if len_file_base > len_file_patch:
@@ -835,7 +846,8 @@ class Files :
             list_header.append((f"{'<' * count_symbol}{string_status}{'>' * count_symbol}",black,False))
             return list_header
         else:
-            raise ValueError(f'Не верный параметр в функции : {Files.file_result_analysis_header.__name__} ')
+            raise ValueError(f"{self.show_translation("value_error_file_result")}"
+                             f"{Files.file_result_analysis_header.__name__} ")
         return list_header
 
 
@@ -848,12 +860,9 @@ class Files :
         :param path_patch_file: Путь к исходному файлу (Файл который соответствует текущей версии файла).
         :return: Строка, которая была добавлена или наоборот отсутствует и номер строки
         """
-
         list_diff_lines = [[],[]]
         with open( path_base_file, 'r') as base_file, open(path_patch_file, 'r') as patch_file:
-
             diff = difflib.ndiff(base_file.readlines(), patch_file.readlines())
-
         for i, line in enumerate(diff):
             if line[:2].count('-') == 1 :
                 line_add = line[1:].strip()
@@ -873,8 +882,7 @@ class Files :
         return list_diff_lines
 
 
-    @staticmethod
-    def starting_file(path_file:str) -> None:
+    def starting_file(self,path_file:str) -> None:
         """
         Метод для открытия файла в программе по умолчанию для разных операционных систем.
         :param path_file: Путь к файлу который нужно запустить
@@ -889,8 +897,7 @@ class Files :
             elif system == "Darwin":  # macOS
                 subprocess.run(["open", path_file], check=True)
         except:
-            raise Exception(f'Не известная ОС. Файл не открыт')
-
+            raise Exception(f"{self.show_translation("exception_starting_file")}")
 
 
     def replacing_files(self,path_files:str|None) -> None:
@@ -902,6 +909,16 @@ class Files :
                             dirs_exist_ok=True)
 
 
+    def show_translation(self,*args:Any) -> str :
+        """
+        Метод формирует строку с переводом
+        :param args: Данные передаваемые в строку.
+        :return: Строку с переведенным текстом.
+        """
+        string = ""
+        for item in args :
+            string += f"{self.translator.t(item,self.get_language())}"
+        return string
 
 # f =Files()
 # base = '/home/max/PythonProject/test/Copy_code_2025-05-10/project_deepseek_frontend_2025-05-10 12-43.txt'

@@ -17,6 +17,7 @@ class MenuNavigator:
         self.data_cls = Data()
         self. choice_cls = Choice()
 
+
     def navigator(self,menu:Dict):
         for index, values in enumerate(menu):
             data =  menu[values]
@@ -47,7 +48,6 @@ class MenuNavigator:
         input_method = self.validator.get_value_dict(value, "input_method")
         create_field = self.validator.get_value_dict(value,"create_field")
         requirement = self.validator.get_value_dict(value,"requirement")
-
         if choice :
             self.choice_cls.get_choice(choice)
         if question := self.validator.get_value_dict(value, 'question'):
@@ -56,7 +56,7 @@ class MenuNavigator:
                 self.select = self.validator.validator_select(name_menu, data, self.select, self.min_value)
             else:
                 self.select = self.validator.validator_input(name_menu,question,requirement,data_type,input_method,action,
-                                                             self.select, data,self.min_value)
+                                                             self.select, data,self.min_value,max_value)
             if  action :
                 if create_field :
                     self.action.action(action,[self.select,create_field,requirement])
@@ -65,16 +65,19 @@ class MenuNavigator:
                 return None  # Остаемся в том же пункте меню main_menu
         elif action :
             if data_type :
-                self.select = self.validator.validator_input(name_menu,question,requirement,data_type,input_method,action,
-                                                       self.select, data,self.min_value)
+                self.select = self.validator.validator_input(name_menu,question,requirement,data_type,
+                                         input_method,action,self.select, data,self.min_value,max_value)
                 if create_field:
                     self.action.action(action, [self.select, create_field,requirement])
                 else:
+
                     self.action.action(action, self.select)
             return None  # Остаемся в том же пункте меню main_menu
         # select - триггер, что нужно оставаться в этом меню, своего рода авто выбор нужного меню
         elif select := self.validator.get_value_dict(value, 'select') :
             return int(select)
+        if self.select == '' :
+            self.validator.makes_exit()
         if self.select is None :
             return self.select
         else:

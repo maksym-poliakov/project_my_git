@@ -114,8 +114,8 @@ class Validator:
         return number_select
 
 
-    @staticmethod
-    def select_number_validator(select:int,min_value:int,max_value:int) ->  int :
+
+    def select_number_validator(self,select:int,min_value:int,max_value:int) ->  int :
         """
         Метод проверяет на наличие правильного выбранного диапазона
         :param select: Число введенное пользователем
@@ -126,10 +126,13 @@ class Validator:
         if min_value <= select <= max_value :
             return select
         while True :
-            select = input(f'Введенное значение должно быть от {min_value} до {max_value} : ')
-            if select.isdigit():
+            select = input(f"{self.files.show_translation("select_number_input_start",min_value,"to",max_value,"enter_exit")}")
+            print('select = ',select)
+            if select == '' :
+                self.makes_exit()
+            elif select.isdigit():
                 return int(select)
-            print('Введенное значение должно быть целым числом.')
+            print(f"{self.files.show_translation("enter_exit")}")
 
 
     def validator_select(self,name_menu:str,data:list[dict[str,str]],select:str,min_value:int) -> str|None :
@@ -165,7 +168,7 @@ class Validator:
 
 
     def validator_input(self,name_menu:str,question:str,requirement:str,data_type:str,input_method:str,
-                        action:str,str_input:str|None,data:list[dict[str,str]],min_value:int) :
+                        action:str,str_input:str|None,data:list[dict[str,str]],min_value:int,max_value:int) :
         """
         Метод для проверки введены ли корректно данные пользователем
         :param name_menu: Название меню в котором находится пользователь main_menu/sub_menu/.....
@@ -178,31 +181,50 @@ class Validator:
         :param str_input: Строка с введенными данными от пользователя
         :param data: Словарь с данными для проверки на соответствие
         :param min_value: Минимально допустимое значение для ввода
+        :param max_value: Максимально допустимое значение для ввода
         :return:
         """
-        # print('*** validator_input ***  ','data_type2 = ',data_type,' str_input2 = ',str_input,' action2 = ',action,' input_method = ',input_method)
+        print('*** validator_input ***  ','data_type2 = ',data_type,' str_input2 = ',str_input,' action2 = ',action,' input_method = ',input_method)
+        if str_input is not None and str_input.isdigit() :
+            str_input = int(str_input)
+            str_input = str(self.select_number_validator(str_input,min_value,max_value))
         if data_type == 'int':
             return None
         elif data_type == 'string' and input_method == 'one':
-            if action == "save_file_config" and requirement :
-                # Проверим, является ли путь абсолютным
-                while True:
-                    if self.files.path_absolut_check(str_input):
-                        return str_input
-                    else:
-                        # Выход
-                        if str_input == '':
-                            break
-                        print('Файлов проекта по этому пути не найдено. Введите корректный путь  ')
-                        str_input = self.select(question)
+            if action == "save_file_config"  and requirement :
+                return self.__checking_absolut_path(str_input,question)
             elif action == "save_file_config" :
-                # Выход
+                # Exit
                 if str_input == '':
-                    return None
+                    self.makes_exit()
                 return str_input
-            elif action == "save_file_ignor" :
+            elif action == "add_file_config" and requirement :
+                return self.__checking_absolut_path(str_input,question)
+            elif action == "add_file_config" :
+                # Exit
+                if str_input == '':
+                    self.makes_exit()
+                return str_input
+            return None
+        elif data_type == 'string' and input_method == 'two':
+            if action == "save_file_ignor" :
                return self.validator_ignor_add(question,str_input, input_method)
             return None
+        elif data_type == 'all' and input_method == 'one':
+            # Exit
+            if str_input == '':
+                self.makes_exit()
+                return None
+            if action == "modify_file_config" and requirement :
+                str_input = self.validator_select(name_menu, data, str_input, min_value)
+                return self.data_cls.LIST_LANGUAGE[int(str_input) - 1 ]
+            elif action == "modify_file_config" :
+                print(f"modify_file_config ")
+                pass
+            elif action is None or action == '':
+                print('action = ', action)
+                return self.validator_select(name_menu, data, str_input, min_value)
+            return str_input
         elif data_type == 'all' and input_method == 'two':
             if action == "save_file_ignor" :
                 return self.validator_ignor_add(question,str_input, input_method)
@@ -232,12 +254,11 @@ class Validator:
             if list_param_ignor := self.line_processing_ignore(str_input):
                 return list_param_ignor
             else:
-                # Выход
+                # Exit
                 if str_input == '' or str_input is None:
-                    break
-                print('Не найдено данных определяющих что добавить файл(ы) или папку(и)')
+                    self.makes_exit()
+                print(f"{self.files.show_translation("method_add_print")}")
                 str_input = self.select(question)
-        return None
 
 
     def validator_ignor_add(self,question:str,str_input:str|None,input_method:str) -> list[str]|None:
@@ -267,6 +288,7 @@ class Validator:
                 return self.method_add_by_special_character(question, str_input)
 
         return None
+
 
     @staticmethod
     def select(question: str) -> str:
@@ -307,8 +329,7 @@ class Validator:
         return string_ignore
 
 
-    @staticmethod
-    def get_yes_no(string:str) -> bool:
+    def get_yes_no(self,string:str) -> bool:
         """
         :param string: Строка с вопросом.
         :return: Возвращает True если 'Y' иначе False
@@ -320,7 +341,7 @@ class Validator:
             elif string == 'n':
                 return False
             else:
-                string = input("Вы должны ввести только 'Y' или 'N' : ")
+                string = input(f"{self.files.show_translation("get_yes_no_input")}")
 
 
     # переделать этот метод так как не правильно расставляются приоритеты при вводе данных
@@ -414,7 +435,7 @@ class Validator:
         :param ind: Не обязательный параметр. Нужен только для input_method = "two".
         :return: Верное значение параметра.
         """
-        min_value =  1 # НУЖНО ПОРАБОТАТЬ НАД ЭТИМ НАЧЕНИЕМ ТАК КАК ОНО ВЯТО С ПОТОЛКА СЕЙЧАС
+        min_value =  1 # НУЖНО ПОРАБОТАТЬ НАД ЭТИМ зНАЧЕНИЕМ ТАК КАК ОНО ВЯТО С ПОТОЛКА СЕЙЧАС
         int_inp = ''
         # print('input_method === ',input_method)
         # print('key_param = ', key_param)
@@ -425,16 +446,15 @@ class Validator:
         value_param = int(value_param)
         while min_value > value_param or value_param > len_list_key:
             if input_method == 'one':
-                int_inp = input(f'Введите актуальное значение для {key_param} от {min_value} до '
-                                    f'{len_list_key } Enter выход  : ')
+                int_inp = input(f"{self.files.show_translation("checking_selection_input_start",key_param,
+                                                               "from",min_value,"to",len_list_key,"enter_exit")}")
                 int_inp = self.checking_digits(int_inp,min_value,len_list_key)
                 if  min_value <= int_inp <= len_list_key :
                     return [int_inp]
             if input_method == 'two':
                 # print('value_param = ',value_param)
-                int_inp = input(f'Введите актуальное значение для {key_param} от {min_value} до  '
-                                    f'{len_list_key }'
-                                    f' для значения № {ind + 1} Enter выход  : ')
+                int_inp = input(f"{self.files.show_translation("checking_selection_input_start",key_param,
+                   "from",min_value,"to",len_list_key,"checking_selection_input_method_two",ind + 1,"enter_exit")}")
                 int_inp = self.checking_digits(int_inp,min_value,len_list_key )
             if input_method == 'two' and min_value <= int_inp <=  len_list_key  :
                 return int_inp
@@ -453,7 +473,6 @@ class Validator:
         :param input_method: Значение two - обозначает что может быть передано несколько значений для одного ключа.
         :return: Возвращает строку с числовыми параметрами для каждого и ключей.
         """
-
         # Строка в правильном порядке с индексами положения ключей
         str_input, list_index = self.__input_string_processing(str_input)
         string_param_result = str_input
@@ -500,14 +519,13 @@ class Validator:
         return string_param_result
 
 
-    @staticmethod
-    def checking_digits(number, min_value:int,max_value:int):
+    def checking_digits(self,number, min_value:int,max_value:int):
         if number.isdigit():
             number = int(number)
         else:
             while True:
-                number = input(f'Введенное значение должно быть цифрой. Введите число от {min_value} до '
-                               f'{max_value} : ')
+                number = input(f"{self.files.show_translation("checking_digits_input_start",
+                                                              min_value,"to",max_value," : ")}")
                 if number.isdigit():
                     number = int(number)
                     break
@@ -522,7 +540,6 @@ class Validator:
         :param input_method: Значение two - обозначает что может быть передано несколько значений для одного ключа.
         :return: Возвращает строку с числовыми параметрами для каждого и ключей.
         """
-
         good_string, list_index = self.__input_string_processing(str_input)
         if input_method == 'two':
             good_string = self.__checking_all(good_string, input_method)
@@ -637,8 +654,8 @@ class Validator:
             # Метод возвращает путь к файлу с результатами анализа
             file_analysis = self.files.file_analysis(key, new_dict_copy, selected_copy, 10)
             # print('file_analysis = ', file_analysis)
-            if self.get_yes_no(input(f' Файл : {replacement_file_name} имеет более раннюю версию.'
-                                     f'\nСделать анализ файлов? Y/N : ')):
+            if self.get_yes_no(input(f" {self.files.show_translation("check_selection_yes_no_input_start",
+                replacement_file_name,"check_selection_yes_no_input_center","check_selection_yes_no_input_end")}")):
                 try:
 
                     # print('file_analysis path = ',file_analysis )
@@ -648,13 +665,13 @@ class Validator:
 
                 except Exception as e:
                     print(e)
-                if self.get_yes_no(input('Всё равно заменить файлы? Y/N : ')):
+                if self.get_yes_no(input(f"{self.files.show_translation("check_selection_get_yes_no_input")}")):
                     # Удаляю созданную копию и файл аналитики
                     self.files.delete_copies_analyst(file_analysis,prefix)
                     return selected_copy
                 else:
                     return None
-            if self.get_yes_no(input('Заменить файлы? Y/N : ')):
+            if self.get_yes_no(input(f"{self.files.show_translation("check_selection_get_yes_no_input_next")}")):
                 # Удаляю созданную копию и файл аналитики
                 self.files.delete_copies_analyst(file_analysis,prefix)
                 return selected_copy
@@ -668,8 +685,9 @@ class Validator:
         for key,value in dict_param.items() :
            if len(value) > 1 :
                max_value = len(self.files.dict_copy()[key])
-               print('Замена возможна только на одну копию.')
-               string_inp = input(f'Введите актуальное значение для {key} от 1 до {max_value} Enter выход : ')
+               print(f"{self.files.show_translation("validator_replace_print")}")
+               string_inp = input(f"{self.files.show_translation("validator_replace_input_start",key,
+                                              "validator_replace_input_center",max_value,"enter_exit")} ")
                string_inp = self.checking_digits(string_inp,1,max_value)
                string_inp = self.checking_selection_values(key,string_inp,'one',0)
                # Увеличиваем значение на единицу так как будет создана новая копия для сравнения
@@ -679,3 +697,29 @@ class Validator:
                int_value = dict_param.get(key)[0]
                dict_param[key] = [int_value + 1]
         return dict_param
+
+
+    @staticmethod
+    def makes_exit() :
+         raise UnknownException ('EXIT')
+
+
+    def __checking_absolut_path(self,str_input:str,question:str) -> str:
+        """
+        Метод для проверки введен ли абсолютный путь.
+        Если введен не абсолютный путь, то дает возможность
+        пользователю указать верный абсолютный путь.
+        :param str_input: Строка введенная пользователем.
+        :param question: Текст вопроса для поля ввода данных.
+        :return: Строку с абсолютным путем
+        """
+        # Проверим, является ли путь абсолютным
+        while True:
+            if self.files.path_absolut_check(str_input):
+                return str_input
+            else:
+                # Exit
+                if str_input == '':
+                    self.makes_exit()
+                print(f"{self.files.show_translation("checking_absolut_path_print")}")
+                str_input = self.select(question)

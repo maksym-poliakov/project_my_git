@@ -7,6 +7,8 @@ class Data :
     DIR_IGNOR = []
     FILE_IGNOR = []
     PATTERN_DATA_TIME = r"\d{4}-\d{2}-\d{2} \d{2}-\d{2}"
+    LIST_LANGUAGE = ["en","ru"]
+
 
 
     @classmethod
@@ -15,6 +17,7 @@ class Data :
         Метод сортирует по спискам отдельно файлы отдельно папки
         :param data_ignor: Список с игнорируемыми файлами и папками.
         """
+        data_ignor [:] = [ item for item in data_ignor if item != '']
         for item in data_ignor:
             if item[0] == '/' :
                 item = item[1 :]

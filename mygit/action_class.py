@@ -59,6 +59,13 @@ class Action:
             if not self.files.search_file(self.files.pwd(),Files.NAME_FILE_CONFIG) :
                 self.files.create_file(self.files.pwd(),Files.NAME_FILE_CONFIG)
             return True
+        elif action == "modify_file_config":
+            select, field, requirement = value
+            if requirement == "change_language":
+                save_data = field + select
+                self.files.action_file(self.files.pwd(), self.files.NAME_FILE_CONFIG, field, save_data)
+                print('value ===== ', value)
+            return True
         elif action == "web_settings" :
             pass
         else:

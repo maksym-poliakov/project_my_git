@@ -15,12 +15,16 @@ def status():
     click.echo("Статус: работа в процессе.")
 
 user = MenuNavigator(1)
+files = Files()
 @click.command()
 def menu() :
     try:
-        if not Files.search_file(Files.pwd(),Files.NAME_FILE_CONFIG) :
+        if not Files.search_file(files.pwd(),files.NAME_FILE_CONFIG) :
             user.navigator(m_default)
-
+        if files.get_language() == '':
+            save_data = "language :" + 'en'
+            files.action_file(files.pwd(),files.NAME_FILE_CONFIG,"language :",save_data)
+        print(files.get_language())
         user.navigator(ms)
     except UnknownException  as e:
         print(e)

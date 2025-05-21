@@ -1,21 +1,27 @@
-frequently_question = "Выберите интересующий пункт меню (Enter - выход): "
+from mygit.files_class import Files
+
+
+files = Files()
+
+
+frequently_question = files.show_translation("frequently_question","enter_exit")
 menu_structure = {
                "main_menu": [
             {
                 "title": "copy",
-                "description": " - создать копию файлов",
+                "description": f"{files.show_translation("copy_description")}",
                 "sub_menu": [
                     {
 
                 "action": "copy_files",
                 "data_type":"all",
-                "input_method":"two"
+                "input_method":"one"
                     }
                         ]
             },
             {
                 "title": "replace",
-                "description": " - перезаписать файлы в папке проекта",
+                "description": f"{files.show_translation("replace_description")}",
                 "sub_menu": [
                     {
 
@@ -23,14 +29,14 @@ menu_structure = {
                      "action": "replace_files",
                      "data_type":"all",
                      "input_method": "two",
-                     "question": f"Выберите копию для замены (название/номер) Enter выход : "
+                     "question": f"{files.show_translation("replace_question","enter_exit")}"
                     }
 
                 ]
             },
             {
                 "title": "rebuild copies",
-                "description": " - пересобрать все копии",
+                "description": f"{files.show_translation("rebuild_copies_description")}",
 
             "sub_menu": [
                     {
@@ -41,8 +47,7 @@ menu_structure = {
             },
             {
                 "title": "delete",
-                "description": " - удалить",
-
+                "description": f"{files.show_translation("delete_description")}",
                 "sub_menu": [
                    {
 
@@ -50,13 +55,13 @@ menu_structure = {
                     "action": "delete_copies",
                     "data_type": "all",
                     "input_method": "two",
-                    "question": "Выберите копию(и) для удаления (название/номер) (All - все) Enter выход : "
+                    "question": f"{files.show_translation("delete question","enter_exit")}"
                     }
                ]
             },
             {
                 "title": "ignor",
-                "description": " - добавить в игнор",
+                "description": f"{files.show_translation("ignor_description")}",
                 "sub_menu": [
                    {
 
@@ -64,29 +69,15 @@ menu_structure = {
                     "choice": "choice_list_copies",
                     "data_type": "all",
                     "input_method": "two",
-                    "question": "Выберите копию(и) для добавления в ignor ('*' - файл, '/' - папка ) Enter выход : "
+                    "question": f"{files.show_translation("ignor_question","enter_exit")}"
                 }
 
                ]
             },
-            #     {
-            #     "title": "web",
-            #     "description": " - настройка web хранилища",
-            #     "sub_menu": [
-            #        {
-            #         # "title": "",
-            #         "action": "web_settings",
-            #         # "choice": "choice_list_copies",
-            #         "data_type": "all",
-            #         "input_method": "string",
-            #         "question": "Выберите копию(и) для добавления в ignor ('*' - файл, '/' - папка ) Enter выход : "
-            #     }
-            #
-            #    ]
-            # },
+
             {
                 "title": "help",
-                "description": " - помощь",
+                "description": f"{files.show_translation("help_description")}",
                 "sub_menu": [
                    {
 
@@ -96,7 +87,101 @@ menu_structure = {
                    }
                 ]
             },
-            {"question": f"{frequently_question }" ,"data_type":"all","input_method": "two" }
+            {
+                "title": "Setting",
+                "description": f"{files.show_translation("help_description")}",
+                "sub_menu": [
+                   {
+                    "title": "change language",
+                    "description": f"{files.show_translation("language_description")}",
+                "sub_menu": [
+                    {"title": "English"},
+                    {"title": "Russian"},
+                    {
+                    "action": "modify_file_config",
+                    "choice": "choice_list_language",
+                    "requirement" : "change_language",
+                    "create_field": "language :",
+                    "data_type": "all",
+                    "input_method": "one",
+                    "question": f"{files.show_translation("language_question","enter_exit")}"
+                            }
+                       ]
+                },
+                    {
+                        "title": "change project",
+                        "description": f"{files.show_translation("change_project_description")}",
+                        "sub_menu": [
+                            {
+                        "action": "modify_file_config",
+                        "choice": "choice_list_project",
+                        "data_type": "all",
+                        "input_method": "one",
+                        "question": f"{files.show_translation("change_project_question","enter_exit")}"
+                            }
+                        ]
+
+                    },
+                    {
+                        "title": "added project",
+                        "description": f"{files.show_translation("added_project_description")}",
+                        "sub_menu": [
+                        {
+                        "action": "add_file_config",
+                        "data_type": "string",
+                        "input_method": "one",
+                        "requirement" : "path_absolut",
+                        "create_field": "list_projects :",
+                        "question": f"{files.show_translation("added_absolute_path_question","enter_exit")}"
+                        # "question": "Добавить проект Enter выход : "
+                    },
+                    {
+                        "action": "add_file_config",
+                        "data_type": "string",
+                        "input_method": "one",
+                        "requirement" : "path_absolut",
+                        "create_field": "list_projects :",
+                        "question": f"{files.show_translation("added_path_question","enter_exit")}"
+                    },
+                    {"select" : '1'}
+
+                ]
+
+                    },
+
+                    {
+                    "title": "web",
+                    "description": f"{files.show_translation("web_description")}",
+                    "sub_menu": [
+                       {
+                        # "title": "",
+                        "action": "web_settings",
+                        # "choice": "choice_list_copies",
+                        "data_type": "all",
+                        "input_method": "string",
+                        "question": f"{files.show_translation("web_question","enter_exit")}"
+                    }
+                   ]
+                   },
+                    {
+                        "title": "llm",
+                        "description": f"{files.show_translation("llm_description")}",
+                        "sub_menu": [
+                            {
+                                "action": "env_modify",
+                                "choice": "choice_list_llm",
+                                "data_type": "all",
+                                "input_method": "one",
+                                "question": f"{files.show_translation("llm_question","enter_exit")}"
+                            }
+
+                        ]
+                    },
+
+                    {"question": f"{frequently_question }" ,"data_type":"all","input_method": "one" }
+               ]
+            },
+            {"question": f"{frequently_question }" ,"data_type":"all","input_method": "one"  }
         ]
     }
 
@@ -104,7 +189,7 @@ menu_structure = {
 menu_default = { "main_menu": [
     {
 
-        "title": "Настройка окружения : ",
+        "title": f"{files.show_translation("setting_environment")}",
         "sub_menu": [
         {
 
@@ -117,7 +202,7 @@ menu_default = { "main_menu": [
             "input_method": "one",
             "create_field" : "path_to_project_folder_default :",
             "requirement" : "path_absolut",
-            "question": "Введите абсолютный путь к отслеживаемой директории, где хранятся файлы проекта : "
+            "question": f"{files.show_translation("added_absolute_path_question","enter_exit")}"
 
         },
         {
@@ -127,14 +212,14 @@ menu_default = { "main_menu": [
             "data_type": "string",
             "input_method": "one",
             "create_field" : "path_to_project_copies_folder_default :",
-            "question": "Введите путь абсолютный к директории где будут храниться копии проекта : "
+            "question": f"{files.show_translation("added_path_question","enter_exit")}"
 
         },
         {
             "action": "save_file_ignor",
             "data_type": "string" ,
-            "input_method": "one",
-            "question": "Укажите игнорируемые файлы/папки для добавления в my_git_ignor ('*' - файл, '/' - папка ) Enter выход : "
+            "input_method": "two",
+            "question": f"{files.show_translation("file_ignor_question","enter_exit")}"
         }
             ]
         },
@@ -149,16 +234,20 @@ menu_language = {
             {
                 "title": "English",
                 "action": "save_file_config",
-                "create_field": "language :"
+                "create_field": "language :",
+                "data_type": "string",
+                "input_method": "one"
 
             },
             {
                 "title": "Russian",
                 "action": "save_file_config",
-                "create_field": "language :"
+                "create_field": "language :",
+                "data_type": "string",
+                "input_method": "one"
 
             },
-            {"question": f"Select language" ,"data_type":"all","input_method": "one" }
+            {"question": f"{files.show_translation("language_question","enter_exit")}" ,"data_type":"all","input_method": "one" }
     ]
 }
 
